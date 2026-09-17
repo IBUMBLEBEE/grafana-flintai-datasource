@@ -1,0 +1,14 @@
+---
+description: Go backend bounds, secret handling, and provider request safety for the datasource plugin
+globs: pkg/**/*.go
+alwaysApply: false
+---
+
+# Backend
+
+1. Keep request size, message count, UTF-8, role, URL, timeout, and response size limits enforced; new fields need explicit caps.
+2. Keep `json.Decoder.DisallowUnknownFields()` on chat/generate decode paths.
+3. Sanitize errors and logs: no API keys, Authorization headers, full chat bodies, raw provider envelopes, or raw panel payloads.
+4. Credentials stay in decrypted secure settings server-side only; never echo them to clients.
+5. Model-list resources must use the saved datasource Provider/Base URL/API key, bound upstream timeout/response size, and return only validated model IDs; never accept API keys in request bodies.
+6. Preserve `/health`, `/chat`, and `/generate` contracts unless a task explicitly updates their compatibility plan. Keep provider errors cleaned and secrets redacted.

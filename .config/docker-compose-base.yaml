@@ -1,0 +1,26 @@
+services:
+  grafana:
+    user: root
+    container_name: 'ibumblebee-flint-ai-datasource'
+
+    build:
+      context: .
+      args:
+        grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
+        grafana_version: ${GRAFANA_VERSION:-13.1.0}
+        grafana_registry: ${GRAFANA_REGISTRY:-docker.m.daocloud.io}
+        development: ${DEVELOPMENT:-false}
+        anonymous_auth_enabled: ${ANONYMOUS_AUTH_ENABLED:-true}
+    ports:
+      - 3000:3000/tcp
+    volumes:
+      - ../dist:/var/lib/grafana/plugins/ibumblebee-flint-ai-datasource
+      - ../provisioning:/etc/grafana/provisioning
+      - ..:/root/ibumblebee-flint-ai-datasource
+
+    environment:
+      NODE_ENV: development
+      GF_LOG_FILTERS: plugin.ibumblebee-flint-ai-datasource:debug
+      GF_LOG_LEVEL: debug
+      GF_DATAPROXY_LOGGING: 1
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: ibumblebee-flint-ai-datasource

@@ -1,0 +1,15 @@
+---
+description: Grafana plugin hard constraints — read before changing plugin manifests, builds, or Grafana APIs
+alwaysApply: false
+---
+
+# Grafana plugin core
+
+When changing plugin manifests, builds, Grafana APIs, or UI extensions:
+
+1. Read `@.config/AGENTS/instructions.md` before edits. Never modify `.config/`.
+2. Do not change datasource `plugin.json` `id` or `type`.
+3. Prefer Grafana public docs (`https://grafana.com/developers/plugin-tools/llms.txt`) and installed `@grafana/*` types over memory.
+4. Frontend builds use repo webpack; backend builds use Mage targets from the Grafana plugin Go SDK.
+5. Credentials only in `secureJsonData`. Restart Grafana after any `plugin.json` change before validating.
+6. Provider and dynamic model discovery scope: `@docs/provider-model-selection-execution-plan.md`.

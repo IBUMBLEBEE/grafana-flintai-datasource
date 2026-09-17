@@ -1,0 +1,14 @@
+---
+description: Grafana plugin E2E with @grafana/plugin-e2e — fixtures, selectors, independence
+globs: tests/**/*.spec.ts,playwright*.ts,**/*e2e*/**/*.ts
+alwaysApply: false
+---
+
+# E2E
+
+1. Before writing or changing E2E, read `@.config/AGENTS/e2e-testing.md`.
+2. Use `@grafana/plugin-e2e` fixtures/page models; prefer Grafana selectors and role/name.
+3. Tests must be independent — no order dependence or leftover browser state from prior cases.
+4. Provision stub providers only; never call real OpenAI/DeepSeek or commit real credentials.
+5. Do not hardcode datasource UIDs, dashboard UIDs, or panel IDs to force a pass.
+6. Provider configuration/model discovery scenarios live in plan T4: `@docs/provider-model-selection-execution-plan.md`.

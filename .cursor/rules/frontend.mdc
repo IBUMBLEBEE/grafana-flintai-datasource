@@ -1,0 +1,15 @@
+---
+description: Frontend TypeScript/React constraints for Grafana plugin UI and services
+globs: src/**/*.ts,src/**/*.tsx
+alwaysApply: false
+---
+
+# Frontend
+
+1. Use public `@grafana/data` / `@grafana/runtime` / `@grafana/ui` APIs and installed types only.
+2. Keep network I/O in services/hooks; presentational components stay free of ad-hoc fetches.
+3. Every user-visible async path needs loading, empty, error, and retry.
+4. Interactive controls need accessible names and keyboard operability; prefer role/name in tests.
+5. No unexplained `any`, non-null assertions, or swallowed errors under existing strict checks.
+6. Keep API keys in Grafana `secureJsonData`; never place them in URLs, browser storage, logs, or model-list requests from the frontend.
+7. Provider/model configuration plan: `@docs/provider-model-selection-execution-plan.md`; model-list API evidence: `@docs/provider-model-list-api-research.md`.

@@ -1,0 +1,19 @@
+services:
+  grafana:
+    extends:
+      file: .config/docker-compose-base.yaml
+      service: grafana
+    build:
+      context: ./.config
+      args:
+        grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
+        grafana_version: ${GRAFANA_VERSION:-13.1.0}
+        grafana_registry: ${GRAFANA_REGISTRY:-docker.m.daocloud.io}
+        development: ${DEVELOPMENT:-false}
+        anonymous_auth_enabled: ${ANONYMOUS_AUTH_ENABLED:-true}
+    environment:
+      # Grafana >=12.4 does not forward host env into plugin processes by default.
+      GF_PLUGINS_FORWARD_HOST_ENV_VARS: ibumblebee-flint-ai-datasource
+      FLINT_AI_ALLOW_LOCAL_HTTP: ${FLINT_AI_ALLOW_LOCAL_HTTP:-false}
+      FLINT_AI_API_KEY: ${FLINT_AI_API_KEY:-}
+      FLINT_AI_API_KEY_SECONDARY: ${FLINT_AI_API_KEY_SECONDARY:-}
