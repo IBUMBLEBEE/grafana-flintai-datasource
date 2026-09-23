@@ -1,6 +1,6 @@
 {
   "name": "flint-ai-datasource",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "scripts": {
     "build": "webpack -c ./webpack.config.ts --env production",
     "build:backend": "GOFLAGS=-buildvcs=false mage -v build:backend",

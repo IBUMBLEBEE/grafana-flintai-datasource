@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.2 - 2026-09-23
+
+### Bug fixes
+
+- Fix(release): publish verified GitHub releases
+- Fix(ci): satisfy backend lint checks
+- Fix: correct GitHub repository spelling
+
+### Documentation
+
+- Docs: record GitHub repository rename
+
 ## 0.1.1 - 2026-09-23
 
 ### Bug fixes
