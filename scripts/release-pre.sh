@@ -136,8 +136,25 @@ else
   echo "Updated package.json and package-lock.json."
 fi
 
+if [[ "$MODE" == "--force" ]]; then
+  TEMP_CHANGELOG="$(mktemp)"
+  trap 'rm -f "$TEMP_CHANGELOG"' EXIT
+  awk -v version="$VERSION" '
+    $0 == "## " version || index($0, "## " version " ") == 1 {
+      skipping = 1
+      next
+    }
+    skipping && /^## [0-9]+\.[0-9]+\.[0-9]+( |$)/ {
+      skipping = 0
+    }
+    !skipping { print }
+  ' CHANGELOG.md > "$TEMP_CHANGELOG"
+  mv "$TEMP_CHANGELOG" CHANGELOG.md
+  trap - EXIT
+fi
+
 echo "Generating CHANGELOG.md for ${TAG}..."
-git cliff --tag "$TAG" --output CHANGELOG.md
+git cliff --unreleased --tag "$TAG" --prepend CHANGELOG.md
 npx prettier --write CHANGELOG.md >/dev/null
 echo "Updated CHANGELOG.md."
 
