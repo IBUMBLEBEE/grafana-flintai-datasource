@@ -91,7 +91,7 @@ git show v0.2.0
 git push origin v0.2.0
 ```
 
-The script never commits or pushes. Tag creation requires matching package and lockfile versions, a matching Changelog section, and a clean working tree. Pushing the tag starts the gated GitHub release workflow; only after its frontend, backend, vulnerability, and security checks pass does the official Grafana action build the artifacts and create a draft release.
+The script never commits or pushes. Tag creation requires matching package and lockfile versions, a matching Changelog section, and a clean working tree. Pushing the tag starts the gated GitHub release workflow; only after its frontend, backend, vulnerability, and security checks pass does the official Grafana action build a draft with the release artifacts, after which the workflow publishes it as the latest GitHub Release.
 
 ## License
 

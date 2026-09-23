@@ -84,7 +84,7 @@ jobs:
           go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 ./pkg/...
 
   release:
-    name: Build, validate, and create draft release
+    name: Build, validate, and publish release
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -109,3 +109,13 @@ jobs:
           go-version: '1.26.6'
           node-version: '22'
           policy_token: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
+
+      - name: Publish verified GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release edit "${RELEASE_TAG}" --draft=false --latest --verify-tag
+          [[ "$(gh release view "${RELEASE_TAG}" --json isDraft --jq .isDraft)" == "false" ]]

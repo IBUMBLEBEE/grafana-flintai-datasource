@@ -91,7 +91,7 @@ git show v0.2.0
 git push origin v0.2.0
 ```
 
-脚本不会自动提交或推送。创建 Tag 前必须保证 package 与 lockfile 版本一致、Changelog 存在对应版本章节且工作区完全干净。推送 Tag 后会触发带门禁的 GitHub Release workflow；只有前端、后端、漏洞与安全检查全部通过，官方 Grafana Action 才会构建产物并创建 draft release。
+脚本不会自动提交或推送。创建 Tag 前必须保证 package 与 lockfile 版本一致、Changelog 存在对应版本章节且工作区完全干净。推送 Tag 后会触发带门禁的 GitHub Release workflow；只有前端、后端、漏洞与安全检查全部通过，官方 Grafana Action 才会构建 draft 和发布产物，随后 workflow 将其发布为最新 GitHub Release。
 
 ## 许可证
 

@@ -28,7 +28,7 @@ The code, tests, build matrix, package layout, and release automation are substa
 - Set the initial release version consistently to `0.1.0`.
 - Added the official Grafana API compatibility workflow.
 - Added a two-stage release helper (`scripts/release-pre.sh`) with stable-SemVer validation, idempotent preparation, clean-tree enforcement, and local annotated-tag creation. It never commits or pushes.
-- Added a tag-triggered gated release workflow. Its read-only verification job checks version/Tag/Changelog consistency and reruns frontend, backend, vulnerability, and security checks before the write-capable official `build-plugin` job uses Node 22, Go 1.26.6, `buildAll`, and creates a draft GitHub Release. Provenance attestation is enabled automatically for public repositories and disabled while this repository is private because private attestations require GitHub Enterprise Cloud.
+- Added a tag-triggered gated release workflow. Its read-only verification job checks version/Tag/Changelog consistency and reruns frontend, backend, vulnerability, and security checks before the write-capable official `build-plugin` job uses Node 22, Go 1.26.6, and `buildAll` to create a draft with the release artifacts. The workflow then publishes that verified draft as the latest GitHub Release. Provenance attestation is enabled automatically for public repositories and disabled while this repository is private because private attestations require GitHub Enterprise Cloud.
 - Replaced the Linux-only Mage setup with Grafana SDK Mage targets for Linux amd64/arm/arm64, Windows amd64, and macOS amd64/arm64.
 - Upgraded Grafana frontend dependencies to 13.2.2 and React 19.3.0.
 - Upgraded `grafana-plugin-sdk-go` to 0.296.5, Go to 1.26.6, and vulnerable transitive Go dependencies to current fixed releases.
@@ -80,7 +80,7 @@ The `0.1.0` local audit package was approximately 56 MB and contained README, CH
 5. Run `./scripts/release-pre.sh X.Y.Z`, review and commit any generated release-file changes, then run `./scripts/release-pre.sh X.Y.Z --tag` from the clean release commit.
 6. Rebuild and run Plugin Validator against the final archive and the exact public source tag. Resolve every error and explicitly accept or fix each warning.
 7. Review the local annotated tag, then push it; the version must match `package.json`, `package-lock.json`, and `CHANGELOG.md` exactly.
-8. Let the release workflow pass its verification job and create the draft release, then verify the ZIP, `.sha1`, attestation, release notes, and anonymous download URLs before publishing it.
+8. Let the release workflow pass its verification job, create the artifact draft, and publish it; then verify the ZIP, `.sha1`, attestation, release notes, and anonymous download URLs.
 9. Submit the public release asset URL, tag-fixed source URL, SHA1, architecture choice, and testing guidance from the owning Grafana Cloud organization.
 10. After Grafana grants a public signing level, add the access-policy secret and require signed artifacts for future releases.
 
