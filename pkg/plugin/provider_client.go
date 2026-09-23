@@ -115,7 +115,11 @@ func (provider *providerClient) ListModels(ctx context.Context) ([]string, error
 	if err != nil {
 		return nil, &providerCallError{status: http.StatusBadGateway, message: "Could not reach the provider; try again or enter a model ID"}
 	}
-	defer response.Body.Close()
+	defer func() {
+		// The response has already been fully consumed when this runs, so a
+		// transport-level close error cannot change the result returned here.
+		_ = response.Body.Close()
+	}()
 
 	body, err := io.ReadAll(io.LimitReader(response.Body, maxProviderResponseBytes+1))
 	if err != nil || len(body) > maxProviderResponseBytes {
@@ -202,7 +206,11 @@ func (provider *providerClient) requestContent(ctx context.Context, payload []by
 	if err != nil {
 		return "", errors.New("AI provider request failed")
 	}
-	defer response.Body.Close()
+	defer func() {
+		// The response has already been fully consumed when this runs, so a
+		// transport-level close error cannot change the result returned here.
+		_ = response.Body.Close()
+	}()
 	body, err := io.ReadAll(io.LimitReader(response.Body, maxProviderResponseBytes+1))
 	if err != nil || len(body) > maxProviderResponseBytes {
 		return "", errors.New("AI provider response exceeded the size limit")

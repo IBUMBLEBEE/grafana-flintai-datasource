@@ -81,7 +81,7 @@ jobs:
         if: steps.check-for-backend.outputs.has-backend == 'true'
         uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee # v9.2.1
         with:
-          version: latest
+          version: v2.13.2
           args: ./pkg/... ./...
 
       - name: Test backend

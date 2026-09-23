@@ -48,7 +48,7 @@ func buildModelsURL(config providerConfig, stripV1 bool) (string, error) {
 	}
 	base, err := url.Parse(config.baseURL)
 	if err != nil {
-		return "", errors.New("Flint AI Base URL must be an absolute URL without credentials, query, or fragment")
+		return "", errors.New("base URL must be an absolute URL without credentials, query, or fragment")
 	}
 
 	path := strings.TrimRight(base.Path, "/")
@@ -58,7 +58,7 @@ func buildModelsURL(config providerConfig, stripV1 bool) (string, error) {
 
 	modelsURL := &url.URL{Scheme: base.Scheme, Host: base.Host, Path: path + "/models"}
 	if modelsURL.Scheme != base.Scheme || modelsURL.Host != base.Host || modelsURL.User != nil || modelsURL.RawQuery != "" || modelsURL.Fragment != "" {
-		return "", errors.New("Flint AI models URL must stay on the configured Base URL host")
+		return "", errors.New("models URL must stay on the configured Base URL host")
 	}
 	return modelsURL.String(), nil
 }
@@ -108,7 +108,7 @@ func adapterForProvider(providerKind string) (providerAdapter, error) {
 	case providerKindDeepSeek:
 		return deepSeekAdapter{}, nil
 	default:
-		return nil, errors.New("Flint AI provider must be OpenAI or DeepSeek")
+		return nil, errors.New("provider must be OpenAI or DeepSeek")
 	}
 }
 

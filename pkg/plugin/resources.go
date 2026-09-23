@@ -84,14 +84,14 @@ func resolveAPIKey(decrypted map[string]string, providerKind string) string {
 func (config providerConfig) validateConnection() error {
 	parsed, err := url.Parse(config.baseURL)
 	if err != nil || parsed.Scheme == "" || parsed.Host == "" || parsed.Opaque != "" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
-		return errors.New("Flint AI Base URL must be an absolute URL without credentials, query, or fragment")
+		return errors.New("base URL must be an absolute URL without credentials, query, or fragment")
 	}
 	if strings.ContainsAny(parsed.Path, "?#") || strings.ContainsAny(config.baseURL, "?#") {
-		return errors.New("Flint AI Base URL must be an absolute URL without credentials, query, or fragment")
+		return errors.New("base URL must be an absolute URL without credentials, query, or fragment")
 	}
 	if parsed.Scheme != "https" {
 		if parsed.Scheme != "http" || os.Getenv(allowHTTPEnv) != "true" || !isLocalDevelopmentHost(parsed.Hostname()) {
-			return errors.New("Flint AI Base URL must use HTTPS (local HTTP requires explicit backend development opt-in)")
+			return errors.New("base URL must use HTTPS (local HTTP requires explicit backend development opt-in)")
 		}
 	}
 	if err := validateLiteralProviderHost(parsed.Hostname()); err != nil {
@@ -101,7 +101,7 @@ func (config providerConfig) validateConnection() error {
 		return err
 	}
 	if config.apiKey == "" {
-		return errors.New("Flint AI API key is not configured")
+		return errors.New("API key is not configured")
 	}
 	return nil
 }
@@ -111,7 +111,7 @@ func (config providerConfig) validate() error {
 		return err
 	}
 	if config.model == "" || len(config.model) > maxModelIDBytes {
-		return errors.New("Flint AI model is not configured or is too long")
+		return errors.New("model is not configured or is too long")
 	}
 	return nil
 }

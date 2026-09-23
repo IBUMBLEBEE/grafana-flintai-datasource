@@ -100,7 +100,7 @@ func validateLiteralProviderHost(host string) error {
 		return nil
 	}
 	if isBlockedProviderAddress(address) {
-		return errors.New("Flint AI Base URL must not target a private or special-use network")
+		return errors.New("base URL must not target a private or special-use network")
 	}
 	return nil
 }
@@ -197,8 +197,12 @@ func (gate *providerResourceGate) prune(now time.Time) {
 
 func requestIdentity(ctx context.Context) string {
 	pluginContext := backend.PluginConfigFromContext(ctx)
+	namespace := strings.TrimSpace(pluginContext.Namespace)
+	if namespace == "" {
+		namespace = "default"
+	}
 	if pluginContext.User == nil {
-		return fmt.Sprintf("%d\x00system", pluginContext.OrgID)
+		return namespace + "\x00system"
 	}
 	identity := strings.TrimSpace(pluginContext.User.Login)
 	if identity == "" {
@@ -210,5 +214,5 @@ func requestIdentity(ctx context.Context) string {
 	if identity == "" {
 		identity = "authenticated-user"
 	}
-	return fmt.Sprintf("%d\x00%s", pluginContext.OrgID, identity)
+	return namespace + "\x00" + identity
 }

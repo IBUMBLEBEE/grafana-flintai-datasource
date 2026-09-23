@@ -65,7 +65,11 @@ func TestSecureProviderDialRejectsPrivateAndMixedDNSAnswers(t *testing.T) {
 
 func TestSecureProviderDialPinsTheValidatedAddress(t *testing.T) {
 	client, server := net.Pipe()
-	defer server.Close()
+	defer func() {
+		if err := server.Close(); err != nil {
+			t.Errorf("close server connection: %v", err)
+		}
+	}()
 	var dialedAddress string
 	dial := secureProviderDialContext(
 		func(context.Context, string, string) ([]netip.Addr, error) {
@@ -83,7 +87,11 @@ func TestSecureProviderDialPinsTheValidatedAddress(t *testing.T) {
 	if err != nil {
 		t.Fatalf("dial validated address: %v", err)
 	}
-	defer connection.Close()
+	defer func() {
+		if err := connection.Close(); err != nil {
+			t.Errorf("close client connection: %v", err)
+		}
+	}()
 	if dialedAddress != "1.1.1.1:443" {
 		t.Fatalf("expected the validated IP to be dialed, got %q", dialedAddress)
 	}
@@ -98,6 +106,18 @@ func TestProviderConfigRejectsPrivateLiteralHTTPS(t *testing.T) {
 	t.Setenv(allowHTTPEnv, "true")
 	if err := config.validate(); err != nil {
 		t.Fatalf("expected explicit local-development opt-in to permit the private address: %v", err)
+	}
+}
+
+func TestRequestIdentityUsesGrafanaNamespace(t *testing.T) {
+	user := backend.User{Login: "alice"}
+	ctx := backend.WithPluginContext(context.Background(), backend.PluginContext{
+		Namespace: "stack-a",
+		User:      &user,
+	})
+
+	if identity := requestIdentity(ctx); identity != "stack-a\x00alice" {
+		t.Fatalf("expected namespace-scoped identity, got %q", identity)
 	}
 }
 
@@ -120,7 +140,7 @@ func TestRequireGrafanaAdmin(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/test", nil)
-			ctx := backend.WithPluginContext(request.Context(), backend.PluginContext{OrgID: 1, User: test.user})
+			ctx := backend.WithPluginContext(request.Context(), backend.PluginContext{Namespace: "stack-a", User: test.user})
 			recorder := httptest.NewRecorder()
 			handler.ServeHTTP(recorder, request.WithContext(ctx))
 			if recorder.Code != test.status {
@@ -139,7 +159,7 @@ func TestTransientResourceRoutesRequireAdmin(t *testing.T) {
 		t.Run(path, func(t *testing.T) {
 			var response *backend.CallResourceResponse
 			err := datasource.CallResource(context.Background(), &backend.CallResourceRequest{
-				PluginContext: backend.PluginContext{OrgID: 1, User: &backend.User{Login: "viewer", Role: "Viewer"}},
+				PluginContext: backend.PluginContext{Namespace: "stack-a", User: &backend.User{Login: "viewer", Role: "Viewer"}},
 				Path:          path,
 				Method:        http.MethodPost,
 			}, backend.CallResourceResponseSenderFunc(func(value *backend.CallResourceResponse) error {
@@ -210,6 +230,6 @@ func TestProviderResourceGateRejectsExcessConcurrency(t *testing.T) {
 
 func requestWithUser(user backend.User) *http.Request {
 	request := httptest.NewRequest(http.MethodPost, "/generate", nil)
-	ctx := backend.WithPluginContext(request.Context(), backend.PluginContext{OrgID: 1, User: &user})
+	ctx := backend.WithPluginContext(request.Context(), backend.PluginContext{Namespace: "stack-a", User: &user})
 	return request.WithContext(ctx)
 }

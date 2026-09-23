@@ -133,7 +133,7 @@ func (ds *Datasource) QueryData(_ context.Context, request *backend.QueryDataReq
 	response := backend.NewQueryDataResponse()
 	for _, query := range request.Queries {
 		response.Responses[query.RefID] = backend.DataResponse{
-			Error: errors.New("Flint AI is a provider connection for Panel AI Assist, not a business query data source"),
+			Error: errors.New("this Flint AI connection is for Panel AI Assist, not a business query data source"),
 		}
 	}
 	return response, nil
