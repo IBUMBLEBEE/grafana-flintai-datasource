@@ -2,28 +2,80 @@ apiVersion: 1
 
 datasources:
   - name: Flint AI - Demo
-    type: ibumblebee-flint-ai-datasource
+    type: ibumblebee-flintai-datasource
     uid: flint-ai-demo
-    # UI saves advance the stored version, so this seed no longer overwrites them on restart.
     version: 1
     access: proxy
     editable: true
     jsonData:
       baseUrl: https://api.openai.com/v1
       model: gpt-5
-      providerKind: openai-compatible
+      providerKind: openai
     secureJsonData:
-      apiKey: $FLINT_AI_API_KEY
+      openaiApiKey: $FLINT_AI_API_KEY
+
   - name: Flint AI - Secondary
-    type: ibumblebee-flint-ai-datasource
+    type: ibumblebee-flintai-datasource
     uid: flint-ai-secondary
-    # UI saves advance the stored version, so this seed no longer overwrites them on restart.
     version: 1
     access: proxy
     editable: true
     jsonData:
       baseUrl: https://gateway.example.test/v1
       model: flint-model-secondary
-      providerKind: openai-compatible
+      providerKind: openai
     secureJsonData:
-      apiKey: $FLINT_AI_API_KEY_SECONDARY
+      openaiApiKey: $FLINT_AI_API_KEY_SECONDARY
+
+  # Local stub provider for model-discovery E2E (no billable upstream).
+  - name: Flint AI - OpenAI Stub
+    type: ibumblebee-flintai-datasource
+    uid: flint-ai-openai-stub
+    version: 1
+    access: proxy
+    editable: true
+    jsonData:
+      baseUrl: http://stub-provider:18080/v1
+      model: stub-chat
+      providerKind: openai
+    secureJsonData:
+      openaiApiKey: stub-openai-key
+
+  - name: Flint AI - DeepSeek Stub
+    type: ibumblebee-flintai-datasource
+    uid: flint-ai-deepseek-stub
+    version: 1
+    access: proxy
+    editable: true
+    jsonData:
+      baseUrl: http://stub-provider:18080/v1
+      model: stub-chat
+      providerKind: deepseek
+    secureJsonData:
+      deepseekApiKey: stub-deepseek-key
+
+  - name: Flint AI - Authentication Error Stub
+    type: ibumblebee-flintai-datasource
+    uid: flint-ai-auth-error-stub
+    version: 10
+    access: proxy
+    editable: true
+    jsonData:
+      baseUrl: http://stub-provider:18080/v1
+      model: manual-model
+      providerKind: openai
+    secureJsonData:
+      openaiApiKey: reject-models
+
+  - name: Flint AI - Unavailable Models Stub
+    type: ibumblebee-flintai-datasource
+    uid: flint-ai-unavailable-models-stub
+    version: 1
+    access: proxy
+    editable: true
+    jsonData:
+      baseUrl: http://stub-provider:18080/unsupported/v1
+      model: existing-custom-model
+      providerKind: openai
+    secureJsonData:
+      openaiApiKey: stub-openai-key

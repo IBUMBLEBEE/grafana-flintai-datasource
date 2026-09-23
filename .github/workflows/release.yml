@@ -1,0 +1,108 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions: read-all
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify release tag and candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Verify release tag
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "${RELEASE_TAG}" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "Release tag must use stable SemVer, for example v0.1.0."
+            exit 1
+          fi
+
+          package_version="$(node -p "require('./package.json').version")"
+          lock_version="$(node -p "require('./package-lock.json').version")"
+          if [[ "${RELEASE_TAG}" != "v${package_version}" || "${package_version}" != "${lock_version}" ]]; then
+            echo "Tag ${RELEASE_TAG}, package.json ${package_version}, and package-lock.json ${lock_version} must match."
+            exit 1
+          fi
+
+          grep -Eq "^## ${package_version}( |$)" CHANGELOG.md || {
+            echo "CHANGELOG.md has no ${package_version} release section."
+            exit 1
+          }
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate release tooling
+        run: |
+          bash -n scripts/release-pre.sh
+          ./scripts/release-pre.sh --help >/dev/null
+
+      - name: Check frontend
+        run: |
+          npm run typecheck
+          npm run lint -- --no-cache
+          npm run test:ci
+          npm audit --omit=dev --audit-level=high
+          npm run build
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check backend
+        run: |
+          go test -race ./pkg/...
+          go vet ./pkg/...
+          go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./pkg/...
+          go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 ./pkg/...
+
+  release:
+    name: Build, validate, and create draft release
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Build, validate, package, and create draft release
+        uses: grafana/plugin-actions/build-plugin@8b12a2d6fa5fc0939a6bf75905453d4b505ef29a # build-plugin/v1.2.0
+        with:
+          attestation: true
+          backend-target: buildAll
+          go-version: '1.26.6'
+          node-version: '22'
+          policy_token: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}

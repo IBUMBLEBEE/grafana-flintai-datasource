@@ -7,7 +7,10 @@ import (
 )
 
 func TestOpenAIAdapterUsesStrictDynamicProposalSchema(t *testing.T) {
-	request, err := (openAIAdapter{}).buildGenerateRequest(validConfig("https://api.openai.com/v1"), validGenerateRequest())
+	input := validGenerateRequest()
+	minimum, maximum := float64(0), float64(15)
+	input.ChartCatalog[0].Properties = []chartPropertyCatalog{{Key: "cornerRadius", Type: "continuous", Min: &minimum, Max: &maximum}}
+	request, err := (openAIAdapter{}).buildGenerateRequest(validConfig("https://api.openai.com/v1"), input)
 	if err != nil {
 		t.Fatalf("build OpenAI request: %v", err)
 	}
@@ -34,10 +37,43 @@ func TestOpenAIAdapterUsesStrictDynamicProposalSchema(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshal schema: %v", err)
 	}
-	for _, expected := range []string{`"Bar Chart"`, `"Pie Chart"`, `"region"`, `"revenue"`} {
+	for _, expected := range []string{`"Bar Chart"`, `"Pie Chart"`, `"region"`, `"revenue"`, `"chartInput"`, `"Category"`, `"cornerRadius"`, `"minimum":0`, `"required":["x","y","color"]`} {
 		if !strings.Contains(string(encoded), expected) {
 			t.Fatalf("schema does not contain runtime enum %s: %s", expected, encoded)
 		}
+	}
+}
+
+func TestRepairRequestCarriesTheBoundedCompilerErrorAndUsesTheSameSchema(t *testing.T) {
+	input := repairChartRequest{
+		Request: validGenerateRequest(),
+		Candidate: generateChartResponse{
+			ChartType: "Bar Chart",
+			XField:    "region",
+			YField:    "revenue",
+			ChartInput: map[string]any{
+				"chart_spec": map[string]any{
+					"chartType": "Bar Chart",
+					"encodings": map[string]any{"x": map[string]any{"field": "region"}, "y": map[string]any{"field": "revenue"}},
+				},
+			},
+		},
+		CompileError: "chartProperties.cornerRadius must be between 0 and 15",
+		Attempt:      1,
+	}
+	request, err := (openAIAdapter{}).buildRepairRequest(validConfig("https://api.openai.com/v1"), input)
+	if err != nil {
+		t.Fatalf("build repair request: %v", err)
+	}
+	if len(request.Messages) != 2 || !strings.Contains(request.Messages[1].Content, input.CompileError) ||
+		!strings.Contains(request.Messages[1].Content, flintAuthoringContractVersion) ||
+		!strings.Contains(request.Messages[1].Content, "REJECTED CANDIDATE") {
+		t.Fatalf("repair prompt is missing bounded evidence: %#v", request.Messages)
+	}
+	format := request.ResponseFormat.(map[string]any)
+	jsonSchema := format["json_schema"].(map[string]any)
+	if jsonSchema["name"] != "flint_chart_repair" || jsonSchema["strict"] != true {
+		t.Fatalf("repair must retain strict structured output: %#v", jsonSchema)
 	}
 }
 
@@ -81,11 +117,15 @@ func TestGenerateMessagesPreserveConversationRolesAndSeparatePanelContext(t *tes
 	}
 }
 
-func TestProviderKindSupportsOnlyOpenAIAndDeepSeek(t *testing.T) {
-	if normalizeProviderKind(legacyProviderKind) != providerKindOpenAI {
-		t.Fatal("legacy provider kind should migrate to OpenAI")
+func TestProviderKindAcceptsOnlyExactOpenAIAndDeepSeekValues(t *testing.T) {
+	for _, providerKind := range []string{"", "openai-compatible", "gemini"} {
+		if _, err := adapterForProvider(providerKind); err == nil {
+			t.Fatalf("provider kind %q should be rejected", providerKind)
+		}
 	}
-	if _, err := adapterForProvider("gemini"); err == nil {
-		t.Fatal("unsupported provider should be rejected")
+	for _, providerKind := range []string{providerKindOpenAI, providerKindDeepSeek} {
+		if _, err := adapterForProvider(providerKind); err != nil {
+			t.Fatalf("provider kind %q should be accepted: %v", providerKind, err)
+		}
 	}
 }

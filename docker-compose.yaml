@@ -1,4 +1,18 @@
 services:
+  stub-provider:
+    image: ${STUB_PROVIDER_IMAGE:-docker.m.daocloud.io/library/python:3.12-alpine}
+    working_dir: /src
+    volumes:
+      - ./scripts/stub-provider:/src:ro
+    command: ['python', 'server.py']
+    ports:
+      - '18080:18080'
+    healthcheck:
+      test: ['CMD', 'python', '-c', 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:18080/healthz")']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   grafana:
     extends:
       file: .config/docker-compose-base.yaml
@@ -11,9 +25,16 @@ services:
         grafana_registry: ${GRAFANA_REGISTRY:-docker.m.daocloud.io}
         development: ${DEVELOPMENT:-false}
         anonymous_auth_enabled: ${ANONYMOUS_AUTH_ENABLED:-true}
+    depends_on:
+      stub-provider:
+        condition: service_started
     environment:
       # Grafana >=12.4 does not forward host env into plugin processes by default.
-      GF_PLUGINS_FORWARD_HOST_ENV_VARS: ibumblebee-flint-ai-datasource
-      FLINT_AI_ALLOW_LOCAL_HTTP: ${FLINT_AI_ALLOW_LOCAL_HTTP:-false}
+      GF_LOG_FILTERS: plugin.ibumblebee-flintai-datasource:debug
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: ibumblebee-flintai-datasource
+      GF_PLUGINS_FORWARD_HOST_ENV_VARS: ibumblebee-flintai-datasource
+      FLINT_AI_ALLOW_LOCAL_HTTP: ${FLINT_AI_ALLOW_LOCAL_HTTP:-true}
       FLINT_AI_API_KEY: ${FLINT_AI_API_KEY:-}
       FLINT_AI_API_KEY_SECONDARY: ${FLINT_AI_API_KEY_SECONDARY:-}
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

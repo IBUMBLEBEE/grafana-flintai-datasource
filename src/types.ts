@@ -1,6 +1,7 @@
-import { DataQuery, DataSourceJsonData } from '@grafana/data';
+import { DataSourceJsonData } from '@grafana/data';
+import { DataQuery } from '@grafana/schema';
 
-export const FLINT_AI_DATASOURCE_PLUGIN_ID = 'ibumblebee-flint-ai-datasource';
+export const FLINT_AI_DATASOURCE_PLUGIN_ID = 'ibumblebee-flintai-datasource';
 export const FLINT_AI_PROVIDER_KINDS = ['openai', 'deepseek'] as const;
 export type FlintAiProviderKind = (typeof FLINT_AI_PROVIDER_KINDS)[number];
 export const DEFAULT_FLINT_AI_PROVIDER_KIND: FlintAiProviderKind = 'openai';
@@ -8,11 +9,14 @@ export const DEFAULT_FLINT_AI_PROVIDER_KIND: FlintAiProviderKind = 'openai';
 export interface FlintAiJsonData extends DataSourceJsonData {
   baseUrl: string;
   model: string;
+  openaiModel?: string;
+  deepseekModel?: string;
   providerKind: FlintAiProviderKind;
 }
 
 export interface FlintAiSecureJsonData {
-  apiKey?: string;
+  openaiApiKey?: string;
+  deepseekApiKey?: string;
 }
 
 export interface FlintAiQuery extends DataQuery {}
@@ -23,8 +27,25 @@ export interface GenerateChartRequest {
   dataHint?: string;
   suggestedChartType?: string;
   renderBackend: 'echarts' | 'vegalite' | 'plotly' | 'chartjs';
-  chartCatalog: Array<{ chartType: string; channels: string[] }>;
-  frameSummary?: Array<{ frameIndex: number; refId?: string; fields: string[] }>;
+  chartCatalog: Array<{
+    chartType: string;
+    channels: string[];
+    requiredChannels: string[];
+    properties: Array<{
+      key: string;
+      type: 'continuous' | 'discrete' | 'binary';
+      min?: number;
+      max?: number;
+      options?: unknown[];
+    }>;
+  }>;
+  semanticTypes: string[];
+  sampleRows?: Array<Record<string, unknown>>;
+  frameSummary?: Array<{
+    frameIndex: number;
+    refId?: string;
+    fields: string[];
+  }>;
   conversation?: ChatMessage[];
 }
 
@@ -33,8 +54,16 @@ export interface GenerateChartResponse {
   xField?: string;
   yField?: string;
   colorField?: string;
+  chartInput?: unknown;
   specJson?: string;
   rationale?: string;
+}
+
+export interface RepairChartRequest {
+  request: GenerateChartRequest;
+  candidate: GenerateChartResponse;
+  compileError: string;
+  attempt: number;
 }
 
 export interface ChatMessage {
@@ -63,5 +92,27 @@ export interface ChatRequest {
 }
 
 export interface ChatResponse {
+  message: string;
+}
+
+export interface ModelsResponse {
+  models: string[];
+}
+
+export interface ModelsPreviewRequest {
+  providerKind: FlintAiProviderKind;
+  baseUrl: string;
+  apiKey: string;
+}
+
+export interface TestConnectionRequest {
+  providerKind: FlintAiProviderKind;
+  baseUrl: string;
+  model: string;
+  apiKey?: string;
+}
+
+export interface TestConnectionResponse {
+  ok: boolean;
   message: string;
 }

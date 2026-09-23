@@ -1,27 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "Flint AI",
-  "id": "ibumblebee-flint-ai-datasource",
+  "name": "ibumblebee-flintai-datasource",
+  "id": "ibumblebee-flintai-datasource",
   "backend": true,
   "executable": "gpx_flint_ai_datasource",
   "metrics": false,
   "alerting": false,
   "annotations": false,
   "info": {
-    "keywords": ["datasource", "flint", "ai", "openai"],
-    "description": "A secure OpenAI-compatible provider connection for Flint Panel AI Assist.",
+    "keywords": ["datasource", "flint", "ai", "openai", "deepseek", "visualization"],
+    "description": "Secure AI provider configuration and backend services for Flint Panel, with OpenAI and DeepSeek support.",
     "author": { "name": "Ibumblebee" },
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
     },
-    "screenshots": [],
+    "screenshots": [{ "name": "OpenAI and DeepSeek provider configuration", "path": "img/configuration.png" }],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
   "dependencies": {
-    "grafanaDependency": ">=12.3.0",
+    "grafanaDependency": ">=13.1.0",
     "plugins": []
   }
 }

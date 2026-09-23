@@ -1,0 +1,212 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build, lint, and unit tests
+    runs-on: ubuntu-latest
+    outputs:
+      plugin-id: ${{ steps.metadata.outputs.plugin-id }}
+      plugin-version: ${{ steps.metadata.outputs.plugin-version }}
+      has-backend: ${{ steps.check-for-backend.outputs.has-backend }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate release tooling
+        run: |
+          bash -n scripts/release-pre.sh
+          ./scripts/release-pre.sh --help >/dev/null
+
+      - name: Audit production frontend dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Check types
+        run: npm run typecheck
+
+      - name: Lint frontend
+        run: npm run lint
+
+      - name: Test frontend
+        run: npm run test:ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Check for backend
+        id: check-for-backend
+        run: |
+          if [ -f Magefile.go ]; then
+            echo "has-backend=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Go
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Audit reachable backend vulnerabilities
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./pkg/...
+
+      - name: Scan backend security
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        run: go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 ./pkg/...
+
+      - name: Lint backend
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee # v9.2.1
+        with:
+          version: latest
+          args: ./pkg/... ./...
+
+      - name: Test backend
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        uses: magefile/mage-action@a662bd8c29d8106879588cfff83b2faf6e6f59db # v4.0.0
+        with:
+          version: latest
+          args: testRace
+
+      - name: Build all backend targets
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        uses: magefile/mage-action@a662bd8c29d8106879588cfff83b2faf6e6f59db # v4.0.0
+        with:
+          version: latest
+          args: buildAll
+
+      - name: Read plugin metadata
+        id: metadata
+        run: |
+          plugin_id=$(jq -r .id dist/plugin.json)
+          plugin_version=$(jq -r .info.version dist/plugin.json)
+          echo "plugin-id=$plugin_id" >> "$GITHUB_OUTPUT"
+          echo "plugin-version=$plugin_version" >> "$GITHUB_OUTPUT"
+
+      - name: Package plugin for validation
+        run: |
+          mv dist "$PLUGIN_ID"
+          zip -qr "$PLUGIN_ID-$PLUGIN_VERSION.zip" "$PLUGIN_ID"
+        env:
+          PLUGIN_ID: ${{ steps.metadata.outputs.plugin-id }}
+          PLUGIN_VERSION: ${{ steps.metadata.outputs.plugin-version }}
+
+      - name: Validate plugin metadata
+        run: |
+          docker run --pull=always \
+            -v "$PWD/$ARCHIVE:/archive.zip:ro" \
+            grafana/plugin-validator-cli -analyzer=metadatavalid /archive.zip
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}.zip
+
+      - name: Upload plugin build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}
+          path: ${{ steps.metadata.outputs.plugin-id }}
+          retention-days: 5
+
+  resolve-e2e-versions:
+    name: Resolve Grafana E2E versions
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      matrix: ${{ steps.resolve-versions.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Resolve supported Grafana versions
+        id: resolve-versions
+        uses: grafana/plugin-actions/e2e-version@64ea9946103fc0a569c53cf53d27f568af2a44ce # e2e-version/v3.1.0
+
+  e2e:
+    name: E2E ${{ matrix.GRAFANA_IMAGE.name }}@${{ matrix.GRAFANA_IMAGE.VERSION }}
+    needs:
+      - build
+      - resolve-e2e-versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        GRAFANA_IMAGE: ${{ fromJson(needs.resolve-e2e-versions.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Download plugin build
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          path: dist
+          name: ${{ needs.build.outputs.plugin-id }}-${{ needs.build.outputs.plugin-version }}
+
+      - name: Make backend binaries executable
+        if: needs.build.outputs.has-backend == 'true'
+        run: chmod +x ./dist/gpx_*
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start Grafana and the local provider stub
+        run: |
+          docker compose pull
+          ANONYMOUS_AUTH_ENABLED=false \
+            DEVELOPMENT=false \
+            GRAFANA_VERSION="${{ matrix.GRAFANA_IMAGE.VERSION }}" \
+            GRAFANA_IMAGE="${{ matrix.GRAFANA_IMAGE.NAME }}" \
+            docker compose up -d
+
+      - name: Wait for Grafana
+        uses: grafana/plugin-actions/wait-for-grafana@686ff644d420875e6eeb7b4c10d52d634feeacee # wait-for-grafana/v1.0.4
+        with:
+          url: http://localhost:3002/login
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Run E2E tests
+        id: run-tests
+        run: npm run e2e
+        env:
+          GRAFANA_URL: http://localhost:3002
+
+      - name: Grafana logs
+        if: ${{ always() && steps.run-tests.outcome == 'failure' }}
+        run: docker logs ibumblebee-flint-ai-datasource >& grafana-server.log
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down

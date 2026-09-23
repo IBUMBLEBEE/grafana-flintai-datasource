@@ -6,5 +6,5 @@ const baseConfig = require('./.config/jest.config');
 
 module.exports = {
   ...baseConfig,
-  transformIgnorePatterns: [nodeModulesToTransform(grafanaESModules)],
+  transformIgnorePatterns: [nodeModulesToTransform([...grafanaESModules, '@react-hookz/web', '@ver0/deep-equal'])],
 };

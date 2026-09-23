@@ -12,7 +12,7 @@ services:
         development: ${DEVELOPMENT:-false}
         anonymous_auth_enabled: ${ANONYMOUS_AUTH_ENABLED:-true}
     ports:
-      - 3000:3000/tcp
+      - 3002:3000/tcp
     volumes:
       - ../dist:/var/lib/grafana/plugins/ibumblebee-flint-ai-datasource
       - ../provisioning:/etc/grafana/provisioning
