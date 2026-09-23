@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.3 - 2026-09-24
+
+### Bug fixes
+
+- Use a human-friendly plugin display name required by Grafana validation.
+- Align the Go module path with the renamed GitHub repository.
+
+### Documentation
+
+- Use absolute README links that work in the Grafana plugin catalog.
+
 ## 0.1.2 - 2026-09-23
 
 ### Bug fixes

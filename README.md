@@ -1,6 +1,6 @@
 # Flint AI Datasource
 
-[简体中文](README.zh-CN.md)
+[简体中文](https://github.com/IBUMBLEBEE/grafana-flintai-datasource/blob/main/README.zh-CN.md)
 
 Flint AI Datasource is a Grafana data source plugin for Flint Panel. It stores AI provider settings securely and sends chat and chart-generation requests through the Grafana backend.
 
@@ -9,7 +9,7 @@ Supported providers:
 - OpenAI
 - DeepSeek
 
-![Provider configuration](src/img/configuration.png)
+![Provider configuration](https://raw.githubusercontent.com/IBUMBLEBEE/grafana-flintai-datasource/main/src/img/configuration.png)
 
 ## Requirements
 
@@ -95,4 +95,4 @@ The script never commits or pushes. Tag creation requires matching package and l
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE).
+Apache-2.0. See [LICENSE](https://github.com/IBUMBLEBEE/grafana-flintai-datasource/blob/main/LICENSE).
