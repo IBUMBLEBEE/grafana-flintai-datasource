@@ -11,9 +11,9 @@ The code, tests, build matrix, package layout, and release automation are substa
 1. **The Grafana Cloud organization prefix is not registered.**
    - Validator reports `unregistered Grafana Cloud account: ibumblebee` and `organization not found`.
    - Create/choose the owning Grafana Cloud organization first. Its slug must agree with the final plugin ID prefix.
-2. **The configured GitHub remote is not yet usable as a public release source.**
-   - The confirmed canonical repository name is `IBUMBLEBEE/grafana-flintai-datasource`; project, repository, and issue links now consistently use that spelling.
-   - The existing private GitHub repository still needs to be renamed to `grafana-flintai-datasource` in GitHub Settings before the corrected SSH remote becomes reachable. Make it public before publishing a GitHub Release.
+2. **The GitHub repository is not yet a public release source.**
+   - The repository has been renamed to the confirmed canonical name `IBUMBLEBEE/grafana-flintai-datasource`; `main`, existing tags, project metadata, and issue links consistently use that spelling.
+   - The repository remains private and is not anonymously accessible. Make it public before publishing a GitHub Release or submitting its source and artifact URLs to Grafana.
 3. **The plugin classification needs confirmation from Grafana.**
    - The plugin depends on commercial OpenAI and DeepSeek services. Under Grafana's policy this likely falls under Commercial rather than Community classification, but Grafana makes the final determination.
    - Confirm the classification and any Commercial Plugin Subscription requirement with Grafana before tagging the release.
@@ -75,7 +75,7 @@ The `0.1.0` local audit package was approximately 56 MB and contained README, CH
 
 1. Register or select the owning Grafana Cloud organization with slug `ibumblebee`.
 2. Confirm Community/Commercial classification and subscription requirements with Grafana.
-3. Rename the GitHub repository to `grafana-flintai-datasource`, verify the corrected `origin`, and make the reviewed default branch public.
+3. Make `IBUMBLEBEE/grafana-flintai-datasource` public and verify anonymous access to the reviewed default branch and release assets.
 4. Review the full working tree, run all checks, commit, and ensure CI is green on a clean revision.
 5. Run `./scripts/release-pre.sh X.Y.Z`, review and commit any generated release-file changes, then run `./scripts/release-pre.sh X.Y.Z --tag` from the clean release commit.
 6. Rebuild and run Plugin Validator against the final archive and the exact public source tag. Resolve every error and explicitly accept or fix each warning.
