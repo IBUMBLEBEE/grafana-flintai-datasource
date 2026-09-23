@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 - 2026-09-23
+
+### Bug fixes
+
+- Fix(release): preserve prior changelog entries
+- Fix(ci): support releases from private repositories
+
 ## 0.1.0 - 2026-09-23
 
 ### Added
