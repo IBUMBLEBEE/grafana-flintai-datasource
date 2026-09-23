@@ -1,4 +1,4 @@
-module github.com/ibumblebee/grafana-flint-ai-datasource
+module github.com/ibumblebee/grafana-flintai-datasource
 
 go 1.26.6
 

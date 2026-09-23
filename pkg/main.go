@@ -5,7 +5,7 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/ibumblebee/grafana-flint-ai-datasource/pkg/plugin"
+	"github.com/ibumblebee/grafana-flintai-datasource/pkg/plugin"
 )
 
 func main() {
