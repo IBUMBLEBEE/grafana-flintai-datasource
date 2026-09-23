@@ -4,7 +4,7 @@ Audit date: 2026-09-23
 
 Status: **NOT READY FOR A PUBLIC GITHUB/GRAFANA RELEASE**
 
-The code, tests, build matrix, package layout, and release automation are substantially ready. The repository-local metadata issues have been corrected. Public release remains blocked by external organization, classification, and distribution prerequisites; no tag or GitHub Release has been created.
+The code, tests, build matrix, package layout, and release automation are substantially ready. The repository-local metadata issues have been corrected. A private staging tag has been pushed to exercise the release automation, but public release remains blocked by external organization, classification, and distribution prerequisites.
 
 ## Blocking items
 
@@ -12,14 +12,14 @@ The code, tests, build matrix, package layout, and release automation are substa
    - Validator reports `unregistered Grafana Cloud account: ibumblebee` and `organization not found`.
    - Create/choose the owning Grafana Cloud organization first. Its slug must agree with the final plugin ID prefix.
 2. **The configured GitHub remote is not yet usable as a public release source.**
-   - `origin` is configured as `git@github.com:IBUMBLEBEE/grafaba-flintai-datasource.git`, but it currently exposes no remote branches or tags.
-   - Confirm whether `grafaba` is the intended repository spelling before the first push. Then add real `info.links`, `repository`, `homepage`, and issue links. Do not publish a tag until the final public URL is confirmed.
+   - `origin` is `git@github.com:IBUMBLEBEE/grafaba-flintai-datasource.git`; its `main` branch and private staging tags are now available over authenticated SSH, but the repository is not anonymously accessible.
+   - Confirm whether `grafaba` is the intended public repository spelling before changing visibility. Then add real `info.links`, `repository`, `homepage`, and issue links before publishing a GitHub Release.
 3. **The plugin classification needs confirmation from Grafana.**
    - The plugin depends on commercial OpenAI and DeepSeek services. Under Grafana's policy this likely falls under Commercial rather than Community classification, but Grafana makes the final determination.
    - Confirm the classification and any Commercial Plugin Subscription requirement with Grafana before tagging the release.
-4. **The release must come from a reviewed, committed, clean revision.**
-   - The working tree currently contains a large provider/model-selection change set and the release-preparation changes. Review and commit them before creating `v0.1.0`.
-   - After the public repository and tag exist, rerun Plugin Validator using the exact public tag source URL and release asset URL. A local-only validation cannot prove public source/archive correspondence or provenance.
+4. **The public release must be revalidated after the repository becomes public.**
+   - The reviewed provider/model-selection, security, and release-preparation changes are committed and tagged from a clean revision.
+   - After the public repository and final public tag exist, rerun Plugin Validator using the exact public tag source URL and release asset URL. A private/local-only validation cannot prove anonymous source/archive correspondence or public provenance.
 
 ## Completed preparation
 
@@ -28,7 +28,7 @@ The code, tests, build matrix, package layout, and release automation are substa
 - Set the initial release version consistently to `0.1.0`.
 - Added the official Grafana API compatibility workflow.
 - Added a two-stage release helper (`scripts/release-pre.sh`) with stable-SemVer validation, idempotent preparation, clean-tree enforcement, and local annotated-tag creation. It never commits or pushes.
-- Added a tag-triggered gated release workflow. Its read-only verification job checks version/Tag/Changelog consistency and reruns frontend, backend, vulnerability, and security checks before the write-capable official `build-plugin` job uses Node 22, Go 1.26.6, `buildAll`, provenance attestation, and creates a draft GitHub Release.
+- Added a tag-triggered gated release workflow. Its read-only verification job checks version/Tag/Changelog consistency and reruns frontend, backend, vulnerability, and security checks before the write-capable official `build-plugin` job uses Node 22, Go 1.26.6, `buildAll`, and creates a draft GitHub Release. Provenance attestation is enabled automatically for public repositories and disabled while this repository is private because private attestations require GitHub Enterprise Cloud.
 - Replaced the Linux-only Mage setup with Grafana SDK Mage targets for Linux amd64/arm/arm64, Windows amd64, and macOS amd64/arm64.
 - Upgraded Grafana frontend dependencies to 13.2.2 and React 19.3.0.
 - Upgraded `grafana-plugin-sdk-go` to 0.296.5, Go to 1.26.6, and vulnerable transitive Go dependencies to current fixed releases.
@@ -74,11 +74,11 @@ The `0.1.0` local audit package was approximately 56 MB and contained README, CH
 
 1. Register or select the owning Grafana Cloud organization with slug `ibumblebee`.
 2. Confirm Community/Commercial classification and subscription requirements with Grafana.
-3. Confirm the final public GitHub repository name, correct `origin` if necessary, push the reviewed default branch, and populate real project/support links in `plugin.json` and `package.json`.
+3. Confirm the final public GitHub repository name, correct `origin` if necessary, make the reviewed default branch public, and populate real project/support links in `plugin.json` and `package.json`.
 4. Review the full working tree, run all checks, commit, and ensure CI is green on a clean revision.
-5. Run `./scripts/release-pre.sh 0.1.0`, review and commit any generated release-file changes, then run `./scripts/release-pre.sh 0.1.0 --tag` from the clean release commit.
+5. Run `./scripts/release-pre.sh X.Y.Z`, review and commit any generated release-file changes, then run `./scripts/release-pre.sh X.Y.Z --tag` from the clean release commit.
 6. Rebuild and run Plugin Validator against the final archive and the exact public source tag. Resolve every error and explicitly accept or fix each warning.
-7. Review the local annotated tag, then push `v0.1.0`; the version must match `package.json`, `package-lock.json`, and `CHANGELOG.md` exactly.
+7. Review the local annotated tag, then push it; the version must match `package.json`, `package-lock.json`, and `CHANGELOG.md` exactly.
 8. Let the release workflow pass its verification job and create the draft release, then verify the ZIP, `.sha1`, attestation, release notes, and anonymous download URLs before publishing it.
 9. Submit the public release asset URL, tag-fixed source URL, SHA1, architecture choice, and testing guidance from the owning Grafana Cloud organization.
 10. After Grafana grants a public signing level, add the access-policy secret and require signed artifacts for future releases.

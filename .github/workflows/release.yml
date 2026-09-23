@@ -101,7 +101,10 @@ jobs:
       - name: Build, validate, package, and create draft release
         uses: grafana/plugin-actions/build-plugin@8b12a2d6fa5fc0939a6bf75905453d4b505ef29a # build-plugin/v1.2.0
         with:
-          attestation: true
+          # GitHub artifact attestations for private repositories require
+          # Enterprise Cloud. Enable them automatically once this repository
+          # is public, which is also required for Grafana catalog submission.
+          attestation: ${{ github.event.repository.visibility == 'public' }}
           backend-target: buildAll
           go-version: '1.26.6'
           node-version: '22'
