@@ -17,6 +17,14 @@
   },
   "author": "Ibumblebee",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/IBUMBLEBEE/grafana-flintai-datasource#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IBUMBLEBEE/grafana-flintai-datasource.git"
+  },
+  "bugs": {
+    "url": "https://github.com/IBUMBLEBEE/grafana-flintai-datasource/issues"
+  },
   "devDependencies": {
     "@grafana/eslint-config": "^9.0.0",
     "@grafana/plugin-e2e": "^3.10.0",

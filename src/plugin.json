@@ -12,6 +12,10 @@
     "keywords": ["datasource", "flint", "ai", "openai", "deepseek", "visualization"],
     "description": "Secure AI provider configuration and backend services for Flint Panel, with OpenAI and DeepSeek support.",
     "author": { "name": "Ibumblebee" },
+    "links": [
+      { "name": "Repository", "url": "https://github.com/IBUMBLEBEE/grafana-flintai-datasource" },
+      { "name": "Report an issue", "url": "https://github.com/IBUMBLEBEE/grafana-flintai-datasource/issues" }
+    ],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"

@@ -12,8 +12,8 @@ The code, tests, build matrix, package layout, and release automation are substa
    - Validator reports `unregistered Grafana Cloud account: ibumblebee` and `organization not found`.
    - Create/choose the owning Grafana Cloud organization first. Its slug must agree with the final plugin ID prefix.
 2. **The configured GitHub remote is not yet usable as a public release source.**
-   - `origin` is `git@github.com:IBUMBLEBEE/grafaba-flintai-datasource.git`; its `main` branch and private staging tags are now available over authenticated SSH, but the repository is not anonymously accessible.
-   - Confirm whether `grafaba` is the intended public repository spelling before changing visibility. Then add real `info.links`, `repository`, `homepage`, and issue links before publishing a GitHub Release.
+   - The confirmed canonical repository name is `IBUMBLEBEE/grafana-flintai-datasource`; project, repository, and issue links now consistently use that spelling.
+   - The existing private GitHub repository still needs to be renamed to `grafana-flintai-datasource` in GitHub Settings before the corrected SSH remote becomes reachable. Make it public before publishing a GitHub Release.
 3. **The plugin classification needs confirmation from Grafana.**
    - The plugin depends on commercial OpenAI and DeepSeek services. Under Grafana's policy this likely falls under Commercial rather than Community classification, but Grafana makes the final determination.
    - Confirm the classification and any Commercial Plugin Subscription requirement with Grafana before tagging the release.
@@ -33,6 +33,7 @@ The code, tests, build matrix, package layout, and release automation are substa
 - Upgraded Grafana frontend dependencies to 13.2.2 and React 19.3.0.
 - Upgraded `grafana-plugin-sdk-go` to 0.296.5, Go to 1.26.6, and vulnerable transitive Go dependencies to current fixed releases.
 - Added a real configuration screenshot and catalog-facing metadata.
+- Added canonical project, source, and issue links for `IBUMBLEBEE/grafana-flintai-datasource`.
 - Replaced the Apache-2.0 appendix placeholders with the project copyright owner/year; the Validator license analyzer now passes without warning.
 - Removed README relative links that break on the Grafana catalog page.
 - Set the tested minimum Grafana version to 13.1.0. Grafana 12.3 does not expose the Combobox open-state callback required by model discovery; Grafana 13.1 and 13.2.2 do.
@@ -74,7 +75,7 @@ The `0.1.0` local audit package was approximately 56 MB and contained README, CH
 
 1. Register or select the owning Grafana Cloud organization with slug `ibumblebee`.
 2. Confirm Community/Commercial classification and subscription requirements with Grafana.
-3. Confirm the final public GitHub repository name, correct `origin` if necessary, make the reviewed default branch public, and populate real project/support links in `plugin.json` and `package.json`.
+3. Rename the GitHub repository to `grafana-flintai-datasource`, verify the corrected `origin`, and make the reviewed default branch public.
 4. Review the full working tree, run all checks, commit, and ensure CI is green on a clean revision.
 5. Run `./scripts/release-pre.sh X.Y.Z`, review and commit any generated release-file changes, then run `./scripts/release-pre.sh X.Y.Z --tag` from the clean release commit.
 6. Rebuild and run Plugin Validator against the final archive and the exact public source tag. Resolve every error and explicitly accept or fix each warning.
